@@ -1,14 +1,1 @@
-{
-  "name": "circular-noticias-backend",
-  "version": "1.0.0",
-  "description": "Backend para agregação de notícias filtradas por categorias e palavras-chave.",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "moment": "^2.29.4",
-    "rss-parser": "^3.12.0"
-  }
-}
+
