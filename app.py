@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 import feedparser
 import json
+import html
 from utils import format_time, summarize
 
 app = Flask(__name__)
@@ -35,9 +36,9 @@ def get_news():
             count = 0
 
             for item in feed.entries:
-                titulo = item.get('title', '')
-                resumo = item.get('summary', '')
-                data = item.get('published', '')
+                titulo = html.unescape(item.get('title', '').replace('<![CDATA[', '').replace(']]>', '')).strip()
+                resumo = item.get('summary', '') or item.get('description', '')
+                data = item.get('published', '') or item.get('pubDate', '')
 
                 texto = f"{titulo} {resumo}".lower()
 
