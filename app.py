@@ -10,16 +10,15 @@ app = Flask(__name__)
 with open('feeds.json', 'r') as f:
     feeds = json.load(f)
 
-# Palavras-chave organizadas por categorias (exemplo simplificado)
+# Palavras-chave por categoria (RJ + nacional para "brasil")
 palavras_chave = {
-    "ultimas": ["últimas", "notícias de hoje", "destaque", "atualizado"],
-    "politica": ["política", "governo", "prefeito", "vereador", "eleição"],
-    "seguranca": ["crime", "polícia", "homicídio", "assalto", "violência"],
-    "economia": ["economia", "preço", "inflação", "comércio", "emprego"],
-    "cultura": ["cultura", "arte", "evento", "show", "exposição"],
-    "entretenimento": ["tv", "novela", "famosos", "celebridade", "filme"],
-    "esporte": ["futebol", "jogo", "partida", "flamengo", "vasco"],
-    "rio": ["rio de janeiro", "niterói", "baixada fluminense", "duque de caxias"]
+    "ultimas": ["rio de janeiro", "estado do rio", "baixada fluminense", "niterói", "duque de caxias", "nova iguaçu"],
+    "politica": ["governo do estado", "prefeitura", "prefeito", "vereador", "alerg", "palácio guanabara"],
+    "seguranca": ["polícia civil", "polícia militar", "crime no rio", "delegacia", "miliciano", "facção"],
+    "economia": ["comércio no rio", "emprego no rio", "inflação no estado", "investimentos no rio"],
+    "cultura": ["evento no rio", "carnaval", "exposição", "museu", "teatro municipal", "maracanãzinho"],
+    "esporte": ["flamengo", "vasco", "botafogo", "fluminense", "campeonato carioca"],
+    "brasil": ["brasil", "governo federal", "congresso", "senado", "presidência", "lula", "bolsonaro"]
 }
 
 @app.route('/')
@@ -27,7 +26,14 @@ def home():
     return jsonify({'status': 'OK'})
 
 @app.route('/news')
-def get_news():
+def get_news_geral():
+    return filtrar_noticias()
+
+@app.route('/news/<categoria>')
+def get_news_por_categoria(categoria):
+    return filtrar_noticias(categoria)
+
+def filtrar_noticias(categoria=None):
     todas_noticias = []
 
     for fonte, url in feeds.items():
@@ -38,11 +44,16 @@ def get_news():
             for item in feed.entries:
                 titulo = html.unescape(item.get('title', '').replace('<![CDATA[', '').replace(']]>', '')).strip()
                 resumo = item.get('summary', '') or item.get('description', '')
-                data = item.get('published', '') or item.get('pubDate', '')
+                data = item.get('published') or item.get('pubDate') or item.get('updated') or getattr(item, 'published_parsed', '')
 
                 texto = f"{titulo} {resumo}".lower()
 
-                if any(palavra in texto for chave in palavras_chave.values() for palavra in chave):
+                if categoria:
+                    palavras = palavras_chave.get(categoria, [])
+                else:
+                    palavras = [p for chave in palavras_chave.values() for p in chave]
+
+                if any(p in texto for p in palavras):
                     if count < 3:
                         todas_noticias.append({
                             "titulo": titulo,
